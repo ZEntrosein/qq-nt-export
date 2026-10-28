@@ -1,0 +1,6 @@
+# SQLCipher / key extraction dependencies from the upstream project.
+sqlcipher3-wheels
+pycryptodome>=3.20
+zstandard>=0.22
+# QCE-compatible Excel output.
+openpyxl>=3.1.5,<4

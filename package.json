@@ -1,0 +1,16 @@
+{
+  "name": "qq-nt-export-qce",
+  "private": true,
+  "type": "module",
+  "version": "1.0.0-qce.1",
+  "license": "GPL-3.0-only",
+  "scripts": {
+    "build:renderer": "node tools/build-qce-renderer.mjs",
+    "test:browser": "node tests/browser.mjs",
+    "test:silk": "node tests/silk.mjs"
+  },
+  "devDependencies": {
+    "esbuild": "0.25.10",
+    "playwright-core": "1.64.1"
+  }
+}

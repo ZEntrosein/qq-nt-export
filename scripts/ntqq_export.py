@@ -371,6 +371,10 @@ def export(src, outdir, limit=0, self_uid=None, self_qq=None, only=None):
 
 
 def main():
+    # Preserve the upstream exporter by default; select the QCE-compatible profile explicitly.
+    if "--qce" in sys.argv[1:]:
+        from qce_compat.cli import main as qce_main
+        return qce_main([value for value in sys.argv[1:] if value != "--qce"])
     ap = argparse.ArgumentParser()
     ap.add_argument("--src", default=None, help="明文 SQLite 路径（默认 <work_dir>/nt_msg_plain.db）")
     ap.add_argument("--outdir", default=None, help="输出目录（默认 config.json output_dir；用 --only 时默认 <output_dir>/filter_<条件>）")

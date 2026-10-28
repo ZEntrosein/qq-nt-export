@@ -16,3 +16,12 @@ verify_report.json
 sessions_index.json
 __pycache__/
 *.pyc
+.venv/
+.venv-*/
+.pytest_cache/
+output-qce/
+test-output/
+dist/
+*.partial
+*.partial.zip
+node_modules/

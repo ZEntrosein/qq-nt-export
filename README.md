@@ -1,4 +1,15 @@
-# qq-nt-export
+# qq-nt-export / QCE 兼容导出版
+
+本 fork 基于 `q957506633/qq-nt-export`，新增与现有 QQ Chat Exporter
+插件一致的 JSON 消息结构和资源目录，并复用原插件 HTML 渲染器。
+同时支持 TXT、Excel，以及按会话分别打包 ZIP。
+
+**新版使用方法见 [README-QCE.md](README-QCE.md)。**
+入口：`python scripts/ntqq_export_qce.py`，或在原入口后加 `--qce`。
+原入口不加 `--qce` 时保留上游行为。兼容导出读取已经解密的数据库和本地媒体缓存，
+不会启动 QQ、NapCat 或网络下载服务。
+
+以下为上游工具说明，亦完整保存在 [README_UPSTREAM.md](README_UPSTREAM.md)。
 
 [English](README_EN.md) | 简体中文
 
@@ -151,4 +162,5 @@ output/
 
 ## License
 
-[MIT](LICENSE)
+本兼容版包含 GPL-3.0 的 QCE 渲染代码，整体按 [GPL-3.0](LICENSE) 分发。
+上游 qq-nt-export 原有代码的 MIT 授权保留在 [LICENSE-MIT-UPSTREAM](LICENSE-MIT-UPSTREAM)。
