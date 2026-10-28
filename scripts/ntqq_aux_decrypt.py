@@ -6,7 +6,7 @@ NTQQ 辅助库解密（group_info.db / profile_info.db 等，源库只读）
 与 profile_info.db（好友资料）里保存了稳定的昵称/群名片映射，
 解密后供 ntqq_export.py 做发送者昵称回填，消除导出中的 uid/裸 QQ 号。
 
-凭据来源：<work_dir>/ntqq_db_key.json（由 ntqq_key_scan.py 内存扫描产出，
+凭据来源：<work_dir>/ntqq_key_scan.json（兼容旧版 ntqq_db_key.json，
 含 nt_db 全部库的 key+salt；每个库用自己的文件头盐值交叉匹配凭据）。
 
 流程（每个库）：
@@ -24,6 +24,7 @@ NTQQ 辅助库解密（group_info.db / profile_info.db 等，源库只读）
 import argparse
 import json
 import os
+import re
 import sys
 import time
 
@@ -48,12 +49,33 @@ def resolve_nt_db_dir(cfg):
     return os.path.dirname(p) if p else None
 
 
+def load_credentials(work, override=None):
+    """Accept the actual key scanner output as well as older credential bundles."""
+    candidates = [override] if override else [os.path.join(work, "ntqq_key_scan.json"), os.path.join(work, "ntqq_db_key.json")]
+    path = next((candidate for candidate in candidates if os.path.isfile(candidate)), None)
+    if path is None:
+        raise FileNotFoundError("找不到密钥扫描结果，请先运行 ntqq_key_scan.py")
+    with open(path, "r", encoding="utf-8-sig") as stream:
+        document = json.load(stream)
+    entries = document.get("all_nt_db_keys") or document.get("all_hits") or []
+    credentials, seen = [], set()
+    for entry in entries:
+        if not isinstance(entry, dict):
+            continue
+        key, salt = str(entry.get("key_hex") or "").lower(), str(entry.get("salt_hex") or "").lower()
+        if not re.fullmatch(r"[0-9a-f]{64}", key) or not re.fullmatch(r"[0-9a-f]{32}", salt) or (key, salt) in seen:
+            continue
+        seen.add((key, salt))
+        credentials.append({**entry, "key_hex": key, "salt_hex": salt})
+    return path, credentials
+
+
 def main():
     ap = argparse.ArgumentParser()
     ap.add_argument("--names", default="group_info.db,profile_info.db",
                     help="要解密的辅助库名（逗号分隔，默认 group_info.db,profile_info.db）")
     ap.add_argument("--keys-json", default=None,
-                    help="凭据 JSON 路径（默认 <work_dir>/ntqq_db_key.json）")
+                    help="凭据 JSON 路径（默认使用密钥扫描结果 ntqq_key_scan.json，兼容旧版）")
     ap.add_argument("--work-dir", default=None)
     ap.add_argument("--no-wal", action="store_true")
     args = ap.parse_args()
@@ -62,16 +84,14 @@ def main():
     cfg = load_config()
     work = args.work_dir or cfg.get("work_dir") or os.path.join(SKILL_DIR, ".work")
     os.makedirs(work, exist_ok=True)
-    keys_path = args.keys_json or os.path.join(work, "ntqq_db_key.json")
-    if not os.path.isfile(keys_path):
-        print("[X] 找不到凭据 JSON: %s（先跑 ntqq_key_scan.py 并保留全量命中）" % keys_path)
+    try:
+        keys_path, creds = load_credentials(work, args.keys_json)
+    except (OSError, ValueError) as exc:
+        print("[X] 无法读取凭据 JSON：%s" % exc)
         print("[RESULT] %s" % json.dumps({"ok": False, "error": "keys json not found"}, ensure_ascii=False))
         return 1
-    with open(keys_path, "r", encoding="utf-8") as f:
-        keydoc = json.load(f)
-    creds = keydoc.get("all_nt_db_keys") or []
     if not creds:
-        print("[X] 凭据 JSON 里没有 all_nt_db_keys 条目")
+        print("[X] 扫描结果中没有有效的 key+salt，请确认目标账号已登录后重新扫描")
         print("[RESULT] %s" % json.dumps({"ok": False, "error": "no aux creds"}, ensure_ascii=False))
         return 1
 

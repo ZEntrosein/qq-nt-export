@@ -90,6 +90,8 @@ profile_info_plain.db     # 可选，但建议保留
 
 ### 还没有解密数据库
 
+请使用 `1.0.0-qce.2` 或更新版本：已修正上游扫描输出与辅助库解密输入不一致的问题。
+
 按上游说明准备 `config.json`。扫描密钥时，对应 Windows QQ 账号需要处于已登录状态。
 这些上游脚本不会由兼容导出入口自动运行，也不会自动启动第二个 QQ。
 
@@ -153,7 +155,7 @@ resources/
 ```powershell
 npm ci --ignore-scripts
 npm run build:renderer
-.\.venv\Scripts\python.exe -m unittest tests.test_qce -v
+.\.venv\Scripts\python.exe -m unittest discover -s tests -v
 npm run test:silk
 $env:QCE_READER_PATH = "E:/原项目/qce-viewer/offline/qq-json-reader.html"
 npm run test:browser
